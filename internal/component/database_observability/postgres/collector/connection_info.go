@@ -2,7 +2,6 @@ package collector
 
 import (
 	"context"
-	"database/sql"
 	"regexp"
 	"strings"
 
@@ -20,7 +19,6 @@ type ConnectionInfoArguments struct {
 	Registry      *prometheus.Registry
 	EngineVersion string
 	CloudProvider *database_observability.CloudProvider
-	DB            *sql.DB
 }
 
 type ConnectionInfo struct {
@@ -29,9 +27,6 @@ type ConnectionInfo struct {
 	EngineVersion string
 	InfoMetric    *prometheus.GaugeVec
 	CloudProvider *database_observability.CloudProvider
-	dbConnection  *sql.DB
-	metricLabels  *database_observability.ConnectionInfoLabels
-	monitorState  *database_observability.ConnectionInfoMonitorState
 
 	running *atomic.Bool
 }
@@ -51,7 +46,6 @@ func NewConnectionInfo(args ConnectionInfoArguments) (*ConnectionInfo, error) {
 		EngineVersion: args.EngineVersion,
 		InfoMetric:    infoMetric,
 		CloudProvider: args.CloudProvider,
-		dbConnection:  args.DB,
 		running:       &atomic.Bool{},
 	}, nil
 }
@@ -117,32 +111,13 @@ func (c *ConnectionInfo) Start(ctx context.Context) error {
 
 	c.running.Store(true)
 
-	c.metricLabels = &database_observability.ConnectionInfoLabels{
-		ProviderName:         providerName,
-		ProviderRegion:       providerRegion,
-		ProviderAccount:      providerAccount,
-		DBInstanceIdentifier: dbInstanceIdentifier,
-		Engine:               engine,
-		EngineVersion:        engineVersion,
-	}
-	c.InfoMetric.WithLabelValues(c.metricLabels.LabelValues()...).Set(1)
-
-	if c.dbConnection != nil {
-		c.monitorState = &database_observability.ConnectionInfoMonitorState{MetricRegistered: true}
-	}
+	c.InfoMetric.WithLabelValues(providerName, providerRegion, providerAccount, dbInstanceIdentifier, engine, engineVersion).Set(1)
 
 	return nil
 }
 
 func (c *ConnectionInfo) Stopped() bool {
 	return !c.running.Load()
-}
-
-func (c *ConnectionInfo) Tick(ctx context.Context) {
-	if c.dbConnection == nil || c.monitorState == nil {
-		return
-	}
-	database_observability.ConnectionInfoMonitorTick(ctx, c.dbConnection, c.Registry, c.InfoMetric, c.metricLabels, c.monitorState)
 }
 
 func (c *ConnectionInfo) Stop() {
