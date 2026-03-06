@@ -253,7 +253,6 @@ func (c *Component) Run(ctx context.Context) error {
 		defer tickerConnectionCheck.Stop()
 
 		var consecutivePingFailures int
-		var connectionInfoStopped bool
 
 		for {
 			select {
@@ -266,7 +265,6 @@ func (c *Component) Run(ctx context.Context) error {
 
 				if !hasCollectors {
 					consecutivePingFailures = 0
-					connectionInfoStopped = false
 					level.Debug(c.opts.Logger).Log("msg", "attempting to reconnect to database")
 					if err := c.tryReconnect(ctx); err != nil {
 						level.Error(c.opts.Logger).Log("msg", "reconnection attempt failed", "err", err)
@@ -288,20 +286,17 @@ func (c *Component) Run(ctx context.Context) error {
 						c.mut.Lock()
 						c.stopConnectionInfoCollector()
 						c.mut.Unlock()
-						connectionInfoStopped = true
 						consecutivePingFailures = 0
 					}
 				} else {
-					if connectionInfoStopped {
-						c.mut.Lock()
+					consecutivePingFailures = 0
+					c.mut.Lock()
+					if !c.hasConnectionInfoCollector() {
 						if err := c.startConnectionInfoCollectorOnly(ctx); err != nil {
 							level.Error(c.opts.Logger).Log("msg", "failed to restart connection_info collector", "err", err)
-						} else {
-							connectionInfoStopped = false
 						}
-						c.mut.Unlock()
 					}
-					consecutivePingFailures = 0
+					c.mut.Unlock()
 				}
 			}
 		}
@@ -443,6 +438,17 @@ func (c *Component) Update(args component.Arguments) error {
 
 	c.healthErr.Store("")
 	return nil
+}
+
+// hasConnectionInfoCollector reports whether the connection_info collector is currently in c.collectors.
+// Must be called with c.mut held.
+func (c *Component) hasConnectionInfoCollector() bool {
+	for _, col := range c.collectors {
+		if col.Name() == collector.ConnectionInfoName {
+			return true
+		}
+	}
+	return false
 }
 
 // stopConnectionInfoCollector stops and removes only the connection_info collector from c.collectors.
