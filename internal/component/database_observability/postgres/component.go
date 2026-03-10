@@ -283,20 +283,14 @@ func (c *Component) Run(ctx context.Context) error {
 					consecutivePingFailures++
 					if consecutivePingFailures >= database_observability.ConnectionChecksThreshold {
 						level.Info(c.opts.Logger).Log("msg", "database connection lost, stopping connection_info collector")
-						c.mut.Lock()
 						c.stopConnectionInfoCollector()
-						c.mut.Unlock()
 						consecutivePingFailures = 0
 					}
 				} else {
 					consecutivePingFailures = 0
-					c.mut.Lock()
-					if !c.hasConnectionInfoCollector() {
-						if err := c.startConnectionInfoCollectorOnly(ctx); err != nil {
-							level.Error(c.opts.Logger).Log("msg", "failed to restart connection_info collector", "err", err)
-						}
+					if err := c.startConnectionInfoCollectorOnly(ctx); err != nil {
+						level.Error(c.opts.Logger).Log("msg", "failed to restart connection_info collector", "err", err)
 					}
-					c.mut.Unlock()
 				}
 			}
 		}
@@ -441,8 +435,9 @@ func (c *Component) Update(args component.Arguments) error {
 }
 
 // hasConnectionInfoCollector reports whether the connection_info collector is currently in c.collectors.
-// Must be called with c.mut held.
 func (c *Component) hasConnectionInfoCollector() bool {
+	c.mut.RLock()
+	defer c.mut.RUnlock()
 	for _, col := range c.collectors {
 		if col.Name() == collector.ConnectionInfoName {
 			return true
@@ -452,8 +447,9 @@ func (c *Component) hasConnectionInfoCollector() bool {
 }
 
 // stopConnectionInfoCollector stops and removes only the connection_info collector from c.collectors.
-// Must be called with c.mut held.
 func (c *Component) stopConnectionInfoCollector() {
+	c.mut.Lock()
+	defer c.mut.Unlock()
 	for i, col := range c.collectors {
 		if col.Name() == collector.ConnectionInfoName {
 			col.Stop()
@@ -465,8 +461,15 @@ func (c *Component) stopConnectionInfoCollector() {
 }
 
 // startConnectionInfoCollectorOnly creates and starts only the connection_info collector and appends it to c.collectors.
-// Must be called with c.mut held. No-op if c.dbConnection is nil.
+// No-op if the collector is already present or if c.dbConnection is nil.
 func (c *Component) startConnectionInfoCollectorOnly(ctx context.Context) error {
+	c.mut.Lock()
+	defer c.mut.Unlock()
+	for _, col := range c.collectors {
+		if col.Name() == collector.ConnectionInfoName {
+			return nil
+		}
+	}
 	if c.dbConnection == nil {
 		return nil
 	}
