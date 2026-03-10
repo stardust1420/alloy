@@ -477,18 +477,6 @@ func (c *Component) connectAndStartCollectors(ctx context.Context) error {
 	return nil
 }
 
-// hasConnectionInfoCollector reports whether the connection_info collector is currently in c.collectors.
-func (c *Component) hasConnectionInfoCollector() bool {
-	c.mut.RLock()
-	defer c.mut.RUnlock()
-	for _, col := range c.collectors {
-		if col.Name() == collector.ConnectionInfoName {
-			return true
-		}
-	}
-	return false
-}
-
 // stopConnectionInfoCollector stops and removes only the connection_info collector from c.collectors.
 func (c *Component) stopConnectionInfoCollector() {
 	c.mut.Lock()
