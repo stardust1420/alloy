@@ -424,6 +424,7 @@ func TestProcessingTimeout_ForwardsUnredactedOnTimeout(t *testing.T) {
 		ProcessingTimeout: 10 * time.Millisecond,
 	})
 	require.NoError(t, err)
+	//nolint:staticcheck // DetectContext still requires detect.Fragment in gitleaks v8
 	c.detector = detectorFunc(func(ctx context.Context, _ detect.Fragment) []report.Finding {
 		<-ctx.Done()
 		return nil
@@ -457,6 +458,7 @@ func TestProcessingTimeout_DropsOnTimeoutWhenEnabled(t *testing.T) {
 		DropOnTimeout:     true,
 	})
 	require.NoError(t, err)
+	//nolint:staticcheck // DetectContext still requires detect.Fragment in gitleaks v8
 	c.detector = detectorFunc(func(ctx context.Context, _ detect.Fragment) []report.Finding {
 		<-ctx.Done()
 		return nil
