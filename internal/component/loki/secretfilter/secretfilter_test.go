@@ -40,8 +40,10 @@ type testLog struct {
 	secrets []fakeSecret // List of fake secrets it contains for easy redaction check
 }
 
+//nolint:staticcheck // DetectContext still requires detect.Fragment in gitleaks v8
 type detectorFunc func(context.Context, detect.Fragment) []report.Finding
 
+//nolint:staticcheck // DetectContext still requires detect.Fragment in gitleaks v8
 func (f detectorFunc) DetectContext(ctx context.Context, fragment detect.Fragment) []report.Finding {
 	return f(ctx, fragment)
 }
