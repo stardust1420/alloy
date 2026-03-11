@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.15.0](https://github.com/grafana/alloy/compare/v1.14.0...v1.15.0) (2026-03-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* Renamed undocumented metrics that was previously prefixed with <component_id>_<metric_name> to loki_source_awsfirehose_<metric_name>
+
+### Features 🌟
+
+* **database_observability.mysql:** Embed prometheus exporter within db-o11y component ([#5711](https://github.com/grafana/alloy/issues/5711)) ([88bffb0](https://github.com/grafana/alloy/commit/88bffb0dd71d2e4bd5068048856604b6ba560f56))
+* **loki.write:** Add loki pipeline latency metric ([#5702](https://github.com/grafana/alloy/issues/5702)) ([cc744a1](https://github.com/grafana/alloy/commit/cc744a1f5abbd54f8a3a0680ca23161247a9bf8b))
+
+
+### Bug Fixes 🐛
+
+* Correctly handle the deprecated topic field in otelcol.receiver.kafka configuration ([#5726](https://github.com/grafana/alloy/issues/5726)) ([538ac75](https://github.com/grafana/alloy/commit/538ac7507e54b046fae46eded742b4d65f4c5e30))
+* **loki.process:** Multiline no longer pass empty entry if start was flushed ([#5746](https://github.com/grafana/alloy/issues/5746)) ([7bdedf1](https://github.com/grafana/alloy/commit/7bdedf1af98a125f1c6ec4f6375c4f8b1de6e72d))
+* **loki.source.file:** Keep positions for compressed files when reading is finished ([#5723](https://github.com/grafana/alloy/issues/5723)) ([fb41d0a](https://github.com/grafana/alloy/commit/fb41d0aedc14284533d4579a2715838b01f7e754))
+* **loki.source.gcplog:** Update to pubsub v2 and fix shutdown semantics ([#5713](https://github.com/grafana/alloy/issues/5713)) ([e9d9b69](https://github.com/grafana/alloy/commit/e9d9b69b223ae5dbfa73b45485f145edbdd1a66a))
+
+
+### Chores
+
+* Use shared source structures for aws firehose  ([#5739](https://github.com/grafana/alloy/issues/5739)) ([aef19dc](https://github.com/grafana/alloy/commit/aef19dccc245d6f92acd7228023117485c349070))
+
 ## [1.14.0](https://github.com/grafana/alloy/compare/v1.13.0...v1.14.0) (2026-03-06)
 
 ### ⚠ BREAKING CHANGES
