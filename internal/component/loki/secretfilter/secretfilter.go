@@ -76,13 +76,17 @@ type Component struct {
 	args     Arguments
 	receiver loki.LogsReceiver
 	fanout   []loki.LogsReceiver
-	detector *detect.Detector
+	detector secretDetector
 
 	// redactPercent is the effective percentage (1-100) for gitleaks-style redaction when redact_with is not set. Set at build/update.
 	redactPercent uint
 
 	metrics            *metrics
 	debugDataPublisher livedebugging.DebugDataPublisher
+}
+
+type secretDetector interface {
+	DetectContext(ctx context.Context, fragment detect.Fragment) []report.Finding
 }
 
 // Metrics exposed by this component:

@@ -24,6 +24,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
+	"github.com/zricethezav/gitleaks/v8/detect"
+	"github.com/zricethezav/gitleaks/v8/report"
 )
 
 // fakeSecret represents a fake secret to be used in the tests
@@ -36,6 +38,12 @@ type fakeSecret struct {
 type testLog struct {
 	log     string
 	secrets []fakeSecret // List of fake secrets it contains for easy redaction check
+}
+
+type detectorFunc func(context.Context, detect.Fragment) []report.Finding
+
+func (f detectorFunc) DetectContext(ctx context.Context, fragment detect.Fragment) []report.Finding {
+	return f(ctx, fragment)
 }
 
 // List of fake secrets to use for testing
@@ -411,9 +419,13 @@ func TestProcessingTimeout_ForwardsUnredactedOnTimeout(t *testing.T) {
 	line := "log line with secret " + secret + " end"
 	c, err := New(opts, Arguments{
 		ForwardTo:         []loki.LogsReceiver{loki.NewLogsReceiver()},
-		ProcessingTimeout: 1 * time.Nanosecond, // guaranteed to expire before DetectString returns
+		ProcessingTimeout: 10 * time.Millisecond,
 	})
 	require.NoError(t, err)
+	c.detector = detectorFunc(func(ctx context.Context, _ detect.Fragment) []report.Finding {
+		<-ctx.Done()
+		return nil
+	})
 
 	entry := loki.Entry{
 		Labels: model.LabelSet{},
@@ -439,10 +451,14 @@ func TestProcessingTimeout_DropsOnTimeoutWhenEnabled(t *testing.T) {
 	line := "log line with secret " + secret + " end"
 	c, err := New(opts, Arguments{
 		ForwardTo:         []loki.LogsReceiver{loki.NewLogsReceiver()},
-		ProcessingTimeout: 1 * time.Nanosecond, // guaranteed to expire before DetectString returns
+		ProcessingTimeout: 10 * time.Millisecond,
 		DropOnTimeout:     true,
 	})
 	require.NoError(t, err)
+	c.detector = detectorFunc(func(ctx context.Context, _ detect.Fragment) []report.Finding {
+		<-ctx.Done()
+		return nil
+	})
 
 	entry := loki.Entry{
 		Labels: model.LabelSet{},
