@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.1](https://github.com/grafana/alloy/compare/v1.14.0...v1.14.1) (2026-03-11)
+
+
+### Bug Fixes 🐛
+
+* Correctly handle the deprecated topic field in otelcol.receiver.kafka configuration [backport] ([#5730](https://github.com/grafana/alloy/issues/5730)) ([4393054](https://github.com/grafana/alloy/commit/43930547d5f63b6983716a06dbe4fbd9ea435ebc))
+* **loki.source.file:** Keep positions for compressed files when reading is finished [backport] ([#5741](https://github.com/grafana/alloy/issues/5741)) ([4f6d548](https://github.com/grafana/alloy/commit/4f6d5488c95511e26cfcd965ed2cf51ae30a673d))
+
 ## [1.14.0](https://github.com/grafana/alloy/compare/v1.13.0...v1.14.0) (2026-03-06)
 
 
